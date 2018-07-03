@@ -11,14 +11,13 @@ def main():
     # Fuzzy set type
 
     #fts = sFTS(nsets = 7, do_plots = True)
-
-    fts = sFTS(fs_params = [], ftype = 'triang', order = 1, nsets = 7,
-                         do_plots = False, par1 = 'test1', par2 = 'test2')
+    order = 1
+    fts = sFTS(do_plots = False, order = 1)
 
     data = TAIEX.get_data()
-    data = list(data[0:1500]) +  list(np.mean(data[0:1500])+data[0:1500]*0.2) + list(np.mean(data[0:1500])+data[0:1500]*0.2) 
+    data = list(data[0:1500]) + list(data[0:1500]*3 - 5000) + list(data[0:1500])  
     
-    fts.train(data[0:2])
+    fts.train(data[0:(order+1)])
     fts.forecast(data[2:len(data)])
     
 

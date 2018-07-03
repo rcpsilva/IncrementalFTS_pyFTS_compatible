@@ -6,39 +6,54 @@ Created on Jun 30, 2018
 
 from pyFTS.common import fts
 import numpy as np
-import skfuzzy as fuzz
-from skfuzzy import control as ctrl
 import matplotlib.pyplot as mplt
 import time
-#import plotly.offline as plt
-#import plotly.graph_objs as go
-import itertools
-#plt.init_notebook_mode()
+
 
 class SilvaIncrementalFTS(fts.FTS):
     
-    def __init__(self,fs_params = [], ftype = 'triang', order = 1, nsets = 7,
-                         do_plots = False, **kwargs):
-        
-        super(SilvaIncrementalFTS, self).__init__(name = 'SilvaIncrementalFTS', shortname = 'SIncFTS', order=order, **kwargs)
-        
-        self.incremental_init(fs_params, ftype, order, nsets, do_plots)
-    
-    def incremental_init(self, fs_params = [], ftype = 'triang', order = 1, nsets = 7,
-                         do_plots = False):
-        ''' SilvaIncrementalFTS class parameters
+    def __init__(self, **kwargs):
+        ''' Class constructor
     
         Args:
-            fs_params: fuzzy sets paramenters
-            ftype:     fuzzy set type (FOR NOW IT ONLY IMPLEMENTS TRIANGULAR FUZZY SETSD)
-            order:     FTS order
-            nsets:     number of fuzzy sets
+            fs_params:             fuzzy sets paramenters
+            ftype:                 fuzzy set type (FOR NOW IT ONLY IMPLEMENTS TRIANGULAR FUZZY SETSD)
+            order:                 FTS order
+            nsets:                 number of fuzzy sets
+            sigma_multiplier:      used to define the universe of discourse U = [mu - sigma_multiplier * sigma,mu + sigma_multiplier * sigma] 
+            do_plots:              plots the time series, forcasts, fuzzy sets and prints the rules to the console
         
         '''
         
+        order = 1
+        super(SilvaIncrementalFTS, self).__init__(name = 'SilvaIncrementalFTS', shortname = 'SIncFTS', order = order, **kwargs)
+        
+        self.incremental_init(kwargs.get('fs_params',[]), 
+                              kwargs.get('ftype','triang'), 
+                              kwargs.get('order',order),
+                              kwargs.get('nsets',7),
+                              kwargs.get('sigma_multiplier',3),
+                              kwargs.get('do_plots',False))
+    
+    
+    
+    def incremental_init(self, fs_params, ftype, order, nsets, sigma_multiplier, do_plots):
+        ''' SilvaIncrementalFTS class parameters
+    
+        Args:
+            fs_params:             fuzzy sets paramenters
+            ftype:                 fuzzy set type (FOR NOW IT ONLY IMPLEMENTS TRIANGULAR FUZZY SETSD)
+            order:                 FTS order
+            nsets:                 number of fuzzy sets
+            sigma_multiplier:      used to define the universe of discourse U = [mu - sigma_multiplier * sigma,mu + sigma_multiplier * sigma] 
+            do_plots:              plots the time series, forcasts, fuzzy sets and prints the rules to the console
+        '''
+        
+        
+        
         self.do_plots = do_plots
         self.fs_params = fs_params # Fuzzy set parameters
-        self.ftype = ftype # Type of fuzzy set (For nor now it only implements triangular fuzzy sets)
+        self.ftype = ftype # Type of fuzzy set (For nor now it only implements triangular fuzzy sets )
         self.order = order #  FTS order (For now it only implements first order FTSs)
         
         self.centers = [] # Fuzzy sets centers
@@ -51,7 +66,7 @@ class SilvaIncrementalFTS(fts.FTS):
         self.data_n = 0  # Total number of samples
         self.data_max = 0
         self.data_min = 0
-        self.sigma_multiplier = 3
+        self.sigma_multiplier = sigma_multiplier
         
         
     def generate_sets(self,lb,ub,nsets):
@@ -292,8 +307,6 @@ class SilvaIncrementalFTS(fts.FTS):
             self.data_sigma = newstd;       
             self.data_max = np.maximum(self.data_max,x)
             self.data_min = np.minimum(self.data_min,x)
-            
-            
             self.data_n += 1
             
 
@@ -307,6 +320,10 @@ class SilvaIncrementalFTS(fts.FTS):
             
             # 2) Update rules
             self.update_rules(old_centers)
+            
+            if self.do_plots:
+                print('====================')
+                self.print_rules()
             
             #3) Add latest rule
             # Fuzzify
@@ -329,7 +346,7 @@ class SilvaIncrementalFTS(fts.FTS):
             
             # plots
             if self.do_plots:
-                self.plot_fuzzy_sets(2000,14000,
+                self.plot_fuzzy_sets(500,30000,
                                  begin = -500, scale = 400, nsteps = 1000)
                 
                 mplt.plot(np.array(times)+1,forecasts,'b')
