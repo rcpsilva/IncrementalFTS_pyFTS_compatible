@@ -83,16 +83,17 @@ class SilvaIncrementalFTS(fts.FTS):
             membership: membership (n x m)-matrix (len(x) x len(fuzzy_sets))  
         '''
     
-        x = np.array(x) #Convert to numpy arrays
-        # Compute memberships based on the type of fuzzy set
-        mb = []
-        if ftype == 'triang':
-            for par in fs_params:
-                mb.append([self.triangular_membership(i_x, par) for i_x in x])
-                        
-        mb = np.vstack(mb) # membership from list to matrix
+        nvalues = len(x)
+        nsets = len(fs_params)
+        membership_matrix = np.zeros([nvalues,nsets])
         
-        return mb
+        for i in range(nvalues):
+            for j in range(nsets):
+                if ftype == 'triang':
+                    membership_matrix[i,j] = self.triangular_membership(x[i],fs_params[j])
+        
+        return membership_matrix
+    
     
     def triangular_membership(self,x,setparams):
         """Computes the membership of a value with respect to the fuzzy set defined by setparameters. 
@@ -146,8 +147,8 @@ class SilvaIncrementalFTS(fts.FTS):
         membership = self.membership(x,self.fs_params,self.ftype) 
     
         #Plot sets
-        for i in range(membership.shape[0]):
-            mplt.plot(membership[i,:]*scale + begin,x)
+        for i in range(membership.shape[1]):
+            mplt.plot(membership[:,i]*scale + begin,x)
             
         #mplt.show()
             
@@ -163,12 +164,24 @@ class SilvaIncrementalFTS(fts.FTS):
         Returns:
             fx: a list of fuzzified values 
         '''
-        if not mb:
-            mb = self.membership(x,self.fs_params,self.ftype)
-    
-        fx = [np.argmax(mb[:,i]) for i in np.arange(len(x))] #fuzzified values
         
-        return fx
+        """Fuzzify a value.
+
+        Fuzzify a value in accordance with current partitions / fuzzy sets
+
+        Args:
+            x: Value or array of values to be fuzzified  
+
+        Returns:
+            y: Fuzzified value or array of values
+            
+        """
+        
+        if not mb:
+            mb = self.membership(x, self.fs_params, self.ftype)
+        
+        return np.argmax(mb, 1)
+        
     
     def generate_rules(self,x):
         ''' Generates a set of fuzzy rules given an stream of data (len(x) >= order) 
@@ -213,11 +226,11 @@ class SilvaIncrementalFTS(fts.FTS):
                 
     def update_bounds(self):
         
-        lb = np.minimum(self.data_min,self.data_mu - self.sigma_multiplier*self.data_sigma)
-        ub = np.maximum(self.data_max,self.data_mu + self.sigma_multiplier*self.data_sigma)
+        #lb = np.minimum(self.data_min,self.data_mu - self.sigma_multiplier*self.data_sigma)
+        #ub = np.maximum(self.data_max,self.data_mu + self.sigma_multiplier*self.data_sigma)
         
-        #lb = self.data_mu - self.sigma_multiplier*self.data_sigma
-        #ub = self.data_mu + self.sigma_multiplier*self.data_sigma
+        lb = self.data_mu - self.sigma_multiplier*self.data_sigma
+        ub = self.data_mu + self.sigma_multiplier*self.data_sigma
         
         #lb = self.data_min
         #ub = self.data_max
@@ -252,6 +265,9 @@ class SilvaIncrementalFTS(fts.FTS):
         
         #Store last value
         self.lastx = data[len(data)-1]
+        
+        self.print_rules()
+        
     
     def forecast(self, data, **kwargs):
         
@@ -262,6 +278,10 @@ class SilvaIncrementalFTS(fts.FTS):
             t = 0
         
         for x in data:
+            
+            print(self.data_mu)
+            print(self.data_sigma)
+            
             if self.do_plots:
                 times.append(t)
                 samples.append(x)
@@ -270,14 +290,22 @@ class SilvaIncrementalFTS(fts.FTS):
             # 1) update fuzzy sets
             old_centers = self.centers.copy()
             # Update data stats
-            self.data_n = self.data_n+1 
-            self.data_mu = self.data_mu + (x - self.data_mu)/self.data_n
-            var = self.data_sigma**2
-            self.data_sigma =  np.sqrt( (self.data_n-2)/(self.data_n-1) 
-                                        * var + (1/self.data_n) * (x - self.data_mu)**2)
             
+            n = self.data_n + 1 
+            newmean = self.data_mu + (x - self.data_mu)/n
+            var = self.data_sigma**2
+            newstd =  np.sqrt( (n-2)/(n-1) * var + (1/n) * (x - self.data_mu)**2)
+            
+            
+            self.data_mu = newmean;
+            self.data_sigma = newstd;       
             self.data_max = np.maximum(self.data_max,x)
             self.data_min = np.minimum(self.data_min,x)
+            
+            
+            self.data_n += 1
+            
+
             # Update sets
             
             bounds = self.update_bounds()
@@ -288,7 +316,7 @@ class SilvaIncrementalFTS(fts.FTS):
             
             # 2) Update rules
             self.update_rules(old_centers)
-            self.print_rules()
+            #self.print_rules()
             
             #3) Add latest rule
             # Fuzzify
@@ -319,6 +347,7 @@ class SilvaIncrementalFTS(fts.FTS):
                                  begin = -500, scale = 400, nsteps = 1000)
                 
                 mplt.plot(np.array(times)+1,forecasts,'b')
+                mplt.draw()
                 mplt.plot(times,samples,'r')
                 mplt.draw()
                 mplt.pause(1e-17)
@@ -351,6 +380,40 @@ class SilvaIncrementalFTS(fts.FTS):
         #self.rules = [list(set(r)) for r in new_rules]
         ########################################################
     
+    def forecast_weighted_average2(self,x):
+        """Computes the defuzzified (numerical) values of x according to the model defined by this fts .
+
+        Args:
+            x: list of data values 
+            
+        """
+        # Fuzzify
+        membership_matrix = self.membership(x,self.fs_params,self.ftype)
+        centers = self.centers;
+        
+        def_vals = np.zeros(len(x)) #storage for the defuzified values
+        # Find matching antecendents
+        
+        for i in range(len(x)):
+            memberships = membership_matrix[i,:]                        
+        
+            # Defuzzify
+            #For each rule
+            for j in range(len(self.rules)):
+                # Compute the membership of x in the antecendent j
+                mu = memberships[j]
+                term = 0
+                 
+                if self.rules[j]:
+                    for k in range(len(self.rules[j])):
+                        term = term + centers[self.rules[j][k]]
+                    
+                    def_vals[i] = def_vals[i] + (term/len(self.rules[j]))*mu
+                else: # If the rule is empty, adopt persistence
+                    def_vals[i] = def_vals[i] + centers[j]*mu
+              
+        # Return defuzified values
+        return def_vals 
                    
     def forecast_weighted_average(self,x):
         """Computes the defuzzified (numerical) values of x according to the model defined by this fts .
@@ -367,7 +430,7 @@ class SilvaIncrementalFTS(fts.FTS):
         # Find matching antecendents
         
         for i in range(len(x)):
-            memberships = membership_matrix[:,i]                        
+            memberships = membership_matrix[i,:]                        
         
             # Defuzzify
             #For each rule

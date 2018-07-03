@@ -3,7 +3,7 @@ Created on Jun 30, 2018
 
 @author: rcpsi
 '''
-from SilvaIncrementalFTS2 import SilvaIncrementalFTS as sFTS
+from SilvaIncrementalFTS import SilvaIncrementalFTS as sFTS
 from pyFTS.data import TAIEX
 import numpy as np
 
