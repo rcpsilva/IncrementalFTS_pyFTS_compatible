@@ -17,14 +17,10 @@ import itertools
 
 class SilvaIncrementalFTS(fts.FTS):
     
-    #def __init__(self, **kwargs):
-    #    
-    #    #super(SilvaIncrementalFTS, self)._init_(order=1, **kwargs)
-    #    self.name = "Incremental FTS"
-    #    self.shortname = "IncFTS"
-    #    self.incremental_init()
     def __init__(self,fs_params = [], ftype = 'triang', order = 1, nsets = 7,
-                         do_plots = False):
+                         do_plots = False, **kwargs):
+        
+        super(SilvaIncrementalFTS, self).__init__(name = 'SilvaIncrementalFTS', shortname = 'SIncFTS', order=order, **kwargs)
         
         self.incremental_init(fs_params, ftype, order, nsets, do_plots)
     
@@ -266,8 +262,6 @@ class SilvaIncrementalFTS(fts.FTS):
         #Store last value
         self.lastx = data[len(data)-1]
         
-        self.print_rules()
-        
     
     def forecast(self, data, **kwargs):
         
@@ -278,9 +272,6 @@ class SilvaIncrementalFTS(fts.FTS):
             t = 0
         
         for x in data:
-            
-            print(self.data_mu)
-            print(self.data_sigma)
             
             if self.do_plots:
                 times.append(t)
@@ -316,7 +307,6 @@ class SilvaIncrementalFTS(fts.FTS):
             
             # 2) Update rules
             self.update_rules(old_centers)
-            #self.print_rules()
             
             #3) Add latest rule
             # Fuzzify
@@ -325,9 +315,6 @@ class SilvaIncrementalFTS(fts.FTS):
             ## Update rules with the new point
             antecendent = self.fuzzify([self.lastx])
             consequent = self.fuzzify([x])
-            
-            print(antecendent)
-            print(consequent)
                        
             self.rules[antecendent[0]].update(consequent)
             
@@ -341,7 +328,6 @@ class SilvaIncrementalFTS(fts.FTS):
             forecasts.append(self.forecast_weighted_average([x]))
             
             # plots
-            print(self.do_plots)
             if self.do_plots:
                 self.plot_fuzzy_sets(2000,14000,
                                  begin = -500, scale = 400, nsteps = 1000)
