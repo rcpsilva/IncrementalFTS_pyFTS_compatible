@@ -25,17 +25,12 @@ class SilvaIncrementalFTS(fts.FTS):
         
         '''
         
-        if 'name' not in kwargs:
-            kwargs = dict(kwargs, name='SilvaIncrementalFTS')
-            
-        if 'shortname' not in kwargs:
-            kwargs = dict(kwargs, shortname = 'SIncFTS')
-            
-        if 'order' not in kwargs:
-            kwargs = dict(kwargs, order= 1)
-        
         super(SilvaIncrementalFTS, self).__init__(**kwargs)
-        
+        self.name = 'SilvaIncrementalFTS'
+        self.shortname = 'SIncFTS'
+        self.order = 1
+        self.max_lag = 1
+
         self.incremental_init(kwargs.get('fs_params',[]), 
                               kwargs.get('ftype','triang'), 
                               kwargs.get('order',1),
