@@ -25,12 +25,14 @@ class SilvaIncrementalFTS(fts.FTS):
         
         '''
         
-        order = 1
-        super(SilvaIncrementalFTS, self).__init__(name = 'SilvaIncrementalFTS', shortname = 'SIncFTS', order = order, **kwargs)
-        
+        super(SilvaIncrementalFTS, self).__init__(**kwargs)
+        self.name = 'SilvaIncrementalFTS'
+        self.shortname = 'SIncFTS'
+        self.order = 1
+        self.max_lag = 1
         self.incremental_init(kwargs.get('fs_params',[]), 
                               kwargs.get('ftype','triang'), 
-                              kwargs.get('order',order),
+                              kwargs.get('order',1),
                               kwargs.get('nsets',7),
                               kwargs.get('sigma_multiplier',3),
                               kwargs.get('do_plots',False))
