@@ -25,17 +25,29 @@ class SilvaIncrementalFTS(fts.FTS):
         
         '''
         
+        if 'name' not in kwargs:
+            kwargs = dict(kwargs, name='SilvaIncrementalFTS')
+            
+        if 'shortname' not in kwargs:
+            kwargs = dict(kwargs, shortname = 'SIncFTS')
+            
+        if 'order' not in kwargs:
+            kwargs = dict(kwargs, order=1)
+        
+        if 'max_lag' not in kwargs:
+            kwargs = dict(kwargs, max_lag=1)
+        
         super(SilvaIncrementalFTS, self).__init__(**kwargs)
-        self.name = 'SilvaIncrementalFTS'
-        self.shortname = 'SIncFTS'
-        self.order = 1
-        self.max_lag = 1
+        #self.name = 'SilvaIncrementalFTS'
+        #self.shortname = 'SIncFTS'
+        #self.order = 1
+        #self.max_lag = 1
 
         self.incremental_init(kwargs.get('fs_params',[]), 
                               kwargs.get('ftype','triang'), 
                               kwargs.get('order',1),
                               kwargs.get('nsets',7),
-                              kwargs.get('sigma_multiplier',3),
+                              kwargs.get('sigma_multiplier', 2.326),
                               kwargs.get('do_plots',False))
     
     
@@ -367,33 +379,34 @@ class SilvaIncrementalFTS(fts.FTS):
         #centers_membership_matrix = self.membership(old_centers,self.fs_params,self.ftype)
         mappings = self.fuzzify(old_centers)
         
+#         new_rules = []
+#                 
+#         # Start using sets because it is neater
+#         for i in range(len(self.centers)):
+#             new_rules.append(set())
+#         
+#         for i in range(len(self.centers)):
+#             new_rules[mappings[i]].update(self.rules[i])
+#         
+#         new_rules = [list(n) for n in new_rules]
+#        
+#         for i in range(self.nsets):
+#             for j in range(len(new_rules[i])):
+#                 new_rules[i][j] = mappings[new_rules[i][j]]
+#         
+#         self.rules = [set(n) for n in new_rules]
         
-        new_rules = []
-                
-        # Start using sets because it is neater
-        for i in range(len(self.centers)):
-            new_rules.append(set())
+        new_rules = self.rules.copy()
         
-        for i in range(len(self.centers)):
-            new_rules[mappings[i]].update(self.rules[i])
-        
-        new_rules = [list(n) for n in new_rules]
-       
         for i in range(self.nsets):
             for j in range(len(new_rules[i])):
-                new_rules[i][j] = mappings[new_rules[i][j]]
+                new_rules[i][j] = mappings[new_rules[i][j]] 
         
-        self.rules = [set(n) for n in new_rules]
-        
-        #for i in range(self.nsets):
-        #    for j in range(len(new_rules[i])):
-        #        new_rules[i][j] = mappings[new_rules[i][j]] 
-        
-        #for i in range(self.nsets):
-        #    self.rules[i] = set() # Eliminates copies if different fuzzy sets are mapped onto a single set
+        for i in range(self.nsets):
+            self.rules[i] = set() # Eliminates copies if different fuzzy sets are mapped onto a single set
             
-        #for i in range(self.nsets):
-        #    self.rules[mappings[i]].update(set(new_rules[i]))  # Eliminates copies if different fuzzy sets mapped onto a single set
+        for i in range(self.nsets):
+            self.rules[mappings[i]].update(set(new_rules[i]))  # Eliminates copies if different fuzzy sets mapped onto a single set
         
         # Eliminate copies on the consequent
         #self.rules = [list(set(r)) for r in new_rules]
