@@ -11,7 +11,7 @@ from SilvaIncrementalFTS import SilvaIncrementalFTS as sIncFTS
 import matplotlib.pyplot as mplt
 
 
-class SilvaIncDistributionRestartFTS(sIncFTS):
+class SilvaIncKmeansFTS(sIncFTS):
 
     '''
     classdocs
@@ -39,7 +39,7 @@ class SilvaIncDistributionRestartFTS(sIncFTS):
             kwargs = dict(kwargs, shortname = 'SIncDResFTS')
             
             
-        super(SilvaIncDistributionRestartFTS, self).__init__(**kwargs)
+        super(SilvaIncKmeansFTS, self).__init__(**kwargs)
         
     def forecast(self, data, **kwargs):
         
