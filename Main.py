@@ -3,36 +3,87 @@ Created on Jun 30, 2018
 
 @author: rcpsi
 '''
-from SilvaIncrementalFTS import SilvaIncrementalFTS as sFTS
-from SilvaIncDistributionRestartFTS import SilvaIncDistributionRestartFTS as rFTS
-from pyFTS.data import TAIEX
-from matplotlib import pyplot as mplt
 import numpy as np
+import pandas as pd
+from SilvaIncrementalFTS import SilvaIncrementalFTS as sFTS
+from pyFTS.benchmarks import benchmarks as bchmk, arima, naive, quantreg, knn
+from pyFTS.data import TAIEX, NASDAQ, SP500, artificial
+
+dataset_names = ["TAIEX", "SP500", "NASDAQ", "IMIV", "IMIV0","CMIV", "IMCV"]
+
+benchmark_methods= [arima.ARIMA for k in range(3)] + [naive.Naive] + [quantreg.QuantileRegression for k in range(2)]
+
+benchmark_methods_parameters= [
+        {'order': (1, 0, 0)},
+        {'order': (1, 0, 1)},
+        {'order': (2, 0, 1)},
+        #{'order': (2, 0, 2)},
+        {},
+        {'order': 1, 'alpha': .5},
+        {'order': 2, 'alpha': .5},
+    ]
+
+def get_dataset(dataset_name):
+    if dataset_name == "TAIEX":
+        return TAIEX.get_data()
+    elif dataset_name == "NASDAQ":
+        return NASDAQ.get_data()
+    elif dataset_name == 'IMIV': # Incremental Mean and Incremental Variance
+        return artificial.generate_gaussian_linear(1,0.2,0.2,0.05,it=100, num=50)
+    elif dataset_name == 'IMIV0': # Incremental Mean and Incremental Variance, lower bound equals to 0
+        return artificial.generate_gaussian_linear(1,0.2,0.,0.05, vmin=0,it=100, num=50)
+    elif dataset_name == 'CMIV': # Constant Mean and Incremental Variance
+        return artificial.generate_gaussian_linear(5,0.1,0,0.02,it=100, num=50)
+    elif dataset_name == 'IMCV': # Incremental Mean and Constant Variance
+        return artificial.generate_gaussian_linear(1,0.6,0.1,0,it=100, num=50)
+
 
 def main():
-    # Fuzzy set type
+# <<<<<<< HEAD
+#     # Fuzzy set type
+# 
+#     print('Testing  SilvaIncDistributionRestartFTS')
+#     
+#     fts = sFTS(do_plots = False)
+# 
+#     data = TAIEX.get_data()
+#     data = list(data[0:1000])*4 #+ list(np.array(data[0:1000]) * 4) + list(data[0:1000]) 
+#     
+#     #data = data - data[0]
+#     #data = list(data) + list(data*10 - np.mean(data)) + list(data)
+#     
+# 
+#     print(len(data))
+#     fts.train(data[0:2])
+#     forecasts = fts.forecast(data[2:len(data)])
+#     
+#     mplt.plot(np.arange(2,len(data))+1,forecasts,'b')            
+#     mplt.plot(np.arange(2,len(data)),data[2:len(data)],'r')
+#     mplt.show()
+#     
+#     fts.print_rules()
+#         
+# =======
+    fts = sFTS(do_plots=False)
 
-    print('Testing  SilvaIncDistributionRestartFTS')
-    
-    fts = sFTS(do_plots = False)
-
-    data = TAIEX.get_data()
-    data = list(data[0:1000])*4 #+ list(np.array(data[0:1000]) * 4) + list(data[0:1000]) 
-    
-    #data = data - data[0]
-    #data = list(data) + list(data*10 - np.mean(data)) + list(data)
-    
-
-    print(len(data))
-    fts.train(data[0:2])
-    forecasts = fts.forecast(data[2:len(data)])
-    
-    mplt.plot(np.arange(2,len(data))+1,forecasts,'b')            
-    mplt.plot(np.arange(2,len(data)),data[2:len(data)],'r')
-    mplt.show()
-    
-    fts.print_rules()
-        
+    for dataset_name in dataset_names:
+        dataset = get_dataset(dataset_name)
+        bchmk.sliding_window_benchmarks(dataset, 1000, train=0.5, inc=0.2,
+                                        benchmark_models=True,
+                                        benchmark_methods=benchmark_methods,
+                                        benchmark_methods_parameters=benchmark_methods_parameters,
+                                        models = [fts],
+                                        build_methods = False,
+                                        transformations=[None],
+                                        orders=[1,2,3],
+                                        partitions=[35], # np.arange(10,100,2),
+                                        progress=False, type='point',
+                                        steps_ahead=[1],
+                                        #distributed=True, nodes=['192.168.0.110', '192.168.0.107','192.168.0.106'],\n",
+                                        file="benchmarks.db",
+                                        dataset=dataset_name,
+                                        tag='incremental')
+>>>>>>> 54c261c4b49ff8266de1c585b6e4410cbff02a35
 
 if __name__ == '__main__':
     main()
