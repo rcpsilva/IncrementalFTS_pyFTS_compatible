@@ -25,12 +25,20 @@ class SilvaIncrementalFTS(fts.FTS):
         
         '''
         
-        order = 1
-        super(SilvaIncrementalFTS, self).__init__(name = 'SilvaIncrementalFTS', shortname = 'SIncFTS', order = order, **kwargs)
+        if 'name' not in kwargs:
+            kwargs = dict(kwargs, name='SilvaIncrementalFTS')
+            
+        if 'shortname' not in kwargs:
+            kwargs = dict(kwargs, shortname = 'SIncFTS')
+            
+        if 'order' not in kwargs:
+            kwargs = dict(kwargs, order= 1)
+        
+        super(SilvaIncrementalFTS, self).__init__(**kwargs)
         
         self.incremental_init(kwargs.get('fs_params',[]), 
                               kwargs.get('ftype','triang'), 
-                              kwargs.get('order',order),
+                              kwargs.get('order',1),
                               kwargs.get('nsets',7),
                               kwargs.get('sigma_multiplier',3),
                               kwargs.get('do_plots',False))
@@ -48,8 +56,6 @@ class SilvaIncrementalFTS(fts.FTS):
             sigma_multiplier:      used to define the universe of discourse U = [mu - sigma_multiplier * sigma,mu + sigma_multiplier * sigma] 
             do_plots:              plots the time series, forcasts, fuzzy sets and prints the rules to the console
         '''
-        
-        
         
         self.do_plots = do_plots
         self.fs_params = fs_params # Fuzzy set parameters
