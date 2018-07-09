@@ -14,13 +14,16 @@ def main():
 
     print('Testing  SilvaIncDistributionRestartFTS')
     
-    fts = rFTS(do_plots = True)
+    fts = sFTS(do_plots = False)
 
     data = TAIEX.get_data()
+    data = list(data[0:1000])*4 #+ list(np.array(data[0:1000]) * 4) + list(data[0:1000]) 
+    
     #data = data - data[0]
-    data = list(data) + list(data*10 - np.mean(data)) + list(data)
+    #data = list(data) + list(data*10 - np.mean(data)) + list(data)
     
 
+    print(len(data))
     fts.train(data[0:2])
     forecasts = fts.forecast(data[2:len(data)])
     

@@ -352,7 +352,7 @@ class SilvaIncrementalFTS(fts.FTS):
             
             # plots
             if self.do_plots:
-                self.plot_fuzzy_sets(500,30000,
+                self.plot_fuzzy_sets(500,15000,#1000,30000,
                                  begin = -500, scale = 400, nsteps = 1000)
                 
                 mplt.plot(np.array(times)+1,forecasts,'b')
@@ -372,18 +372,33 @@ class SilvaIncrementalFTS(fts.FTS):
         #centers_membership_matrix = self.membership(old_centers,self.fs_params,self.ftype)
         mappings = self.fuzzify(old_centers)
         
-        ########## Improve this for efficiency! ################
-        new_rules = self.rules.copy()
         
+        new_rules = []
+                
+        # Start using sets because it is neater
+        for i in range(len(self.centers)):
+            new_rules.append(set())
+        
+        for i in range(len(self.centers)):
+            new_rules[mappings[i]].update(self.rules[i])
+        
+        new_rules = [list(n) for n in new_rules]
+       
         for i in range(self.nsets):
             for j in range(len(new_rules[i])):
-                new_rules[i][j] = mappings[new_rules[i][j]] 
+                new_rules[i][j] = mappings[new_rules[i][j]]
         
-        for i in range(self.nsets):
-            self.rules[i] = set() # Eliminates copies if different fuzzy sets are mapped onto a single set
+        self.rules = [set(n) for n in new_rules]
+        
+        #for i in range(self.nsets):
+        #    for j in range(len(new_rules[i])):
+        #        new_rules[i][j] = mappings[new_rules[i][j]] 
+        
+        #for i in range(self.nsets):
+        #    self.rules[i] = set() # Eliminates copies if different fuzzy sets are mapped onto a single set
             
-        for i in range(self.nsets):
-            self.rules[mappings[i]].update(set(new_rules[i]))  # Eliminates copies if different fuzzy sets mapped onto a single set
+        #for i in range(self.nsets):
+        #    self.rules[mappings[i]].update(set(new_rules[i]))  # Eliminates copies if different fuzzy sets mapped onto a single set
         
         # Eliminate copies on the consequent
         #self.rules = [list(set(r)) for r in new_rules]
