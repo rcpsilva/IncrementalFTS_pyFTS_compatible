@@ -6,17 +6,10 @@ Created on Jun 30, 2018
 import numpy as np
 import pandas as pd
 from SilvaIncrementalFTS import SilvaIncrementalFTS as sFTS
-<<<<<<< HEAD
 from pyFTS.benchmarks import benchmarks as bchmk, arima, naive, quantreg, knn
 from pyFTS.data import TAIEX, NASDAQ, SP500, artificial
 
 dataset_names = ["TAIEX", "SP500", "NASDAQ", "IMIV", "IMIV0","CMIV", "IMCV"]
-=======
-from SilvaIncDistributionRestartFTS import SilvaIncDistributionRestartFTS as rFTS
-from pyFTS.data import TAIEX
-from matplotlib import pyplot as mplt
-import numpy as np
->>>>>>> 33a802d18577660efccd05a241e47ee5a1ec6eb5
 
 benchmark_methods= [arima.ARIMA for k in range(3)] + [naive.Naive] + [quantreg.QuantileRegression for k in range(2)]
 
@@ -30,7 +23,6 @@ benchmark_methods_parameters= [
         {'order': 2, 'alpha': .5},
     ]
 
-<<<<<<< HEAD
 def get_dataset(dataset_name):
     if dataset_name == "TAIEX":
         return TAIEX.get_data()
@@ -66,26 +58,6 @@ def main():
                                         file="benchmarks.db",
                                         dataset=dataset_name,
                                         tag='incremental')
-=======
-    print('Testing  SilvaIncDistributionRestartFTS')
-    
-    fts = rFTS(do_plots = True)
-
-    data = TAIEX.get_data()
-    #data = data - data[0]
-    data = list(data) + list(data*10 - np.mean(data)) + list(data)
-    
-
-    fts.train(data[0:2])
-    forecasts = fts.forecast(data[2:len(data)])
-    
-    mplt.plot(np.arange(2,len(data))+1,forecasts,'b')            
-    mplt.plot(np.arange(2,len(data)),data[2:len(data)],'r')
-    mplt.show()
-    
-    fts.print_rules()
->>>>>>> 33a802d18577660efccd05a241e47ee5a1ec6eb5
-        
 
 if __name__ == '__main__':
     main()
