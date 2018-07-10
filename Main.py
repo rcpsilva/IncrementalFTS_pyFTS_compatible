@@ -7,9 +7,12 @@ import numpy as np
 import pandas as pd
 from SilvaIncrementalFTS import SilvaIncrementalFTS as sFTS
 from SilvaIncDistributionRestartFTS import SilvaIncDistributionRestartFTS as rFTS
+from SilvaIncKmeansFTS import SilvaIncKmeansFTS as kFTS
 #from pyFTS.benchmarks import benchmarks as bchmk, arima, naive, quantreg, knn
 from pyFTS.data import TAIEX, NASDAQ, SP500, artificial
 from matplotlib import pyplot as mplt
+
+
 
 dataset_names = ["TAIEX", "SP500", "NASDAQ", "IMIV", "IMIV0","CMIV", "IMCV"]
 
@@ -45,10 +48,10 @@ def main():
  
     print('Testing  SilvaIncDistributionRestartFTS')
      
-    fts = sFTS(do_plots = False)
+    fts = kFTS(do_plots = False)
  
     data = TAIEX.get_data()
-    data = list(data[0:1000])*7  # + list(np.array(data[0:1000]) * 4) + list(data[0:1000]) 
+    data = list(data[0:1000]) + list(np.array(data[0:1000]) * 4) + list(data[0:1000]) + list(np.array(data[0:1000]) * 4)
      
     #data = data - data[0]
     #data = list(data) + list(data*10 - np.mean(data)) + list(data)
@@ -56,10 +59,13 @@ def main():
  
     print(len(data))
     fts.train(data[0:2])
+    print(fts.centers)
     forecasts = fts.forecast(data[2:len(data)])
      
     mplt.plot(np.arange(2,len(data))+1,forecasts,'b')            
     mplt.plot(np.arange(2,len(data)),data[2:len(data)],'r')
+    fts.plot_fuzzy_sets(500,40000,
+                        begin = -500, scale = 400, nsteps = 1000)
     mplt.show()
      
     fts.print_rules()
