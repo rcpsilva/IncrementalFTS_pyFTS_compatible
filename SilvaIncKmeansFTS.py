@@ -41,6 +41,38 @@ class SilvaIncKmeansFTS(sIncFTS):
             
         super(SilvaIncKmeansFTS, self).__init__(**kwargs)
         
+        self.cluster_counts = np.ones(self.nsets) #number of points at each cluster
+    
+    def update_sets(self,x):
+        ''' Incremental kmeans update
+    
+        Args:
+            x: current values
+            n: cluster count
+            
+        '''
+        
+        # Compute the distances from the current centers
+        dists = [np.linalg.norm(x-c) for c in self.centers]
+        
+        # Update the current centers
+        closest_center = np.argmin(dists)
+        n = self.cluster_counts[closest_center]
+        self.centers[closest_center] = (self.centers[closest_center]*n + x)/(n+1) 
+        self.cluster_counts[closest_center] += 1
+        
+        
+        # Re-generate set paramaters  
+        self.fs_params = []
+        
+        self.fs_params.append([-np.inf,self.centers[0], self.centers[1]])
+        
+        for i in np.arange(1,(len(self.centers)-1)):
+            self.fs_params.append([self.centers[i-1],self.centers[i],self.centers[i+1]])
+        
+        self.fs_params.append([self.centers[len(self.centers)-2], self.centers[len(self.centers)-1],np.inf])
+        
+        
     def forecast(self, data, **kwargs):
         
         forecasts = []
@@ -58,37 +90,25 @@ class SilvaIncKmeansFTS(sIncFTS):
                 
             # 1) update fuzzy sets
             old_centers = self.centers.copy()
-            # Update data stats
+                
+            if x < self.data_max and x > self.data_min:   
+                
+                # Update sets
+                self.update_sets(x)
+                
+                # 2) Update rules
+                self.update_rules(old_centers)
             
-            n = self.data_n + 1 
-            newmean = self.data_mu + (x - self.data_mu)/n
-            var = self.data_sigma**2
-            newstd =  np.sqrt( (n-2)/(n-1) * var + (1/n) * (x - self.data_mu)**2)
-            
-            
-            # if there is a significant change in the distribution \alpha = 0.05 restart the learning process
-            if (x > (self.data_mu + self.sigma_multiplier * self.data_sigma)) or (x < (self.data_mu - self.sigma_multiplier * self.data_sigma)): 
-                # Reset
-                print('Reset')
-                self.train([self.lastx,x])
-            else:
-                self.data_mu = newmean;
-                self.data_sigma = newstd;       
+            else: # Reset fuxxy sets
                 self.data_max = np.maximum(self.data_max,x)
                 self.data_min = np.minimum(self.data_min,x)
-                self.data_n += 1
-            
-            
-            # Update sets
-            
-            bounds = self.update_bounds()
-            lb = bounds[0]
-            ub = bounds[1]
-            self.generate_sets(lb,ub,self.nsets)
-            
-            
-            # 2) Update rules
-            self.update_rules(old_centers)
+                
+                self.cluster_counts = np.ones(self.nsets)
+                self.generate_sets(self.data_min, self.data_max, self.nsets)
+                
+                self.update_rules(old_centers)
+                
+                    
             
             if self.do_plots:
                 print('====================')
@@ -115,7 +135,7 @@ class SilvaIncKmeansFTS(sIncFTS):
             
             # plots
             if self.do_plots:
-                self.plot_fuzzy_sets(500,30000,
+                self.plot_fuzzy_sets(500,40000,
                                  begin = -500, scale = 400, nsteps = 1000)
                 
                 mplt.plot(np.array(times)+1,forecasts,'b')
