@@ -69,7 +69,6 @@ class SilvaIncDistributionRestartFTS(sIncFTS):
             # if there is a significant change in the distribution \alpha = 0.05 restart the learning process
             if (x > (self.data_mu + self.sigma_multiplier * self.data_sigma)) or (x < (self.data_mu - self.sigma_multiplier * self.data_sigma)): 
                 # Reset
-                print('Reset')
                 self.train([self.lastx,x])
             else:
                 self.data_mu = newmean;
