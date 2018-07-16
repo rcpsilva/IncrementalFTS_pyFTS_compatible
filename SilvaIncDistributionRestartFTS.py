@@ -110,7 +110,7 @@ class SilvaIncDistributionRestartFTS(sIncFTS):
             self.lastx = x.copy()
             
             # 3) Forecast
-            forecasts.append(self.forecast_weighted_average([x]))
+            forecasts.append(self.forecast_weighted_average_method([x]))
             
             # plots
             if self.do_plots:

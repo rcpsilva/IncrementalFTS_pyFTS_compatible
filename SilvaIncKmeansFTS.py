@@ -51,16 +51,16 @@ class SilvaIncKmeansFTS(sIncFTS):
             n: cluster count
             
         '''
-        
         # Compute the distances from the current centers
         dists = [np.linalg.norm(x-c) for c in self.centers]
         
         # Update the current centers
         closest_center = np.argmin(dists)
+        
+        
         n = self.cluster_counts[closest_center]
         self.centers[closest_center] = (self.centers[closest_center]*n + x)/(n+1) 
         self.cluster_counts[closest_center] += 1
-        
         
         # Re-generate set paramaters  
         self.fs_params = []
@@ -131,12 +131,11 @@ class SilvaIncKmeansFTS(sIncFTS):
             self.lastx = x.copy()
             
             # 3) Forecast
-            forecasts.append(self.forecast_weighted_average([x]))
+            forecasts.append(self.forecast_weighted_average_method([x]))
             
             # plots
             if self.do_plots:
-                self.plot_fuzzy_sets(500,40000,
-                                 begin = -500, scale = 400, nsteps = 1000)
+                self.plot_fuzzy_sets(500,40000,begin = -500, scale = 400, nsteps = 1000)
                 
                 mplt.plot(np.array(times)+1,forecasts,'b')
                 mplt.draw()

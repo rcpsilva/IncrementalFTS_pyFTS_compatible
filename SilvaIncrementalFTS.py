@@ -355,7 +355,8 @@ class SilvaIncrementalFTS(fts.FTS):
             self.lastx = x.copy()
             
             # 3) Forecast
-            forecasts.append(self.forecast_weighted_average([x]))
+            #forecasts.append(self.forecast_weighted_average([x]))
+            forecasts.append(self.forecast_weighted_average_method([x]))
             
             # plots
             if self.do_plots:
@@ -412,72 +413,15 @@ class SilvaIncrementalFTS(fts.FTS):
         #self.rules = [list(set(r)) for r in new_rules]
         ########################################################
     
-    def forecast_weighted_average2(self,x):
+    def forecast_weighted_average_method(self,x):
         """Computes the defuzzified (numerical) values of x according to the model defined by this fts .
 
         Args:
             x: list of data values 
-            
         """
-        # Fuzzify
+        
         membership_matrix = self.membership(x,self.fs_params,self.ftype)
         centers = self.centers;
-        
-        def_vals = np.zeros(len(x)) #storage for the defuzified values
-        # Find matching antecendents
-        
-        for i in range(len(x)):
-            memberships = membership_matrix[i,:]                        
-        
-            # Defuzzify
-            #For each rule
-            for j in range(len(self.rules)):
-                # Compute the membership of x in the antecendent j
-                mu = memberships[j]
-                term = 0
-                 
-                if self.rules[j]:
-                    for k in range(len(self.rules[j])):
-                        term = term + centers[self.rules[j][k]]
-                    
-                    def_vals[i] = def_vals[i] + (term/len(self.rules[j]))*mu
-                else: # If the rule is empty, adopt persistence
-                    def_vals[i] = def_vals[i] + centers[j]*mu
-              
-        # Return defuzified values
-        return def_vals 
-                   
-    def forecast_weighted_average(self,x):
-        """Computes the defuzzified (numerical) values of x according to the model defined by this fts .
-
-        Args:
-            x: list of data values 
-            
-        """
-        # Fuzzify
-        membership_matrix = self.membership(x,self.fs_params,self.ftype)
-        centers = self.centers;
-        
-        def_vals = np.zeros(len(x)) #storage for the defuzified values
-        # Find matching antecendents
-        
-        for i in range(len(x)):
-            memberships = membership_matrix[i,:]                        
-        
-            # Defuzzify
-            #For each rule
-            for j in range(len(self.rules)):
-                # Compute the membership of x in the antecendent j
-                mu = memberships[j]
-                term = 0;
-                 
-                if self.rules[j]:
-                    for k in range(len(self.rules[j])):
-                        term = term + centers[self.rules[j][k]]
-                    
-                    def_vals[i] = def_vals[i] + (term/len(self.rules[j]))*mu
-                else: # If the rule is empty, adopt persistence
-                    def_vals[i] = def_vals[i] + centers[j]*mu
-              
-        # Return defuzified values
-        return def_vals 
+    
+        return np.dot(centers,membership_matrix[0])/np.sum(membership_matrix) 
+    

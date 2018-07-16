@@ -16,17 +16,6 @@ from matplotlib import pyplot as mplt
 
 dataset_names = ["TAIEX", "SP500", "NASDAQ", "IMIV", "IMIV0","CMIV", "IMCV"]
 
-#benchmark_methods= [arima.ARIMA for k in range(3)] + [naive.Naive] + [quantreg.QuantileRegression for k in range(2)]
-
-benchmark_methods_parameters= [
-        {'order': (1, 0, 0)},
-        {'order': (1, 0, 1)},
-        {'order': (2, 0, 1)},
-        #{'order': (2, 0, 2)},
-        {},
-        {'order': 1, 'alpha': .5},
-        {'order': 2, 'alpha': .5},
-    ]
 
 def get_dataset(dataset_name):
     if dataset_name == "TAIEX":
@@ -48,9 +37,11 @@ def main():
  
     print('Testing  SilvaIncDistributionRestartFTS')
      
-    fts = kFTS(do_plots = False)
+    #fts = kFTS(do_plots = False)
+    fts = sFTS(do_plots = False)
+    #fts = rFTS(do_plots = False)
  
-    data = TAIEX.get_data()
+    data = get_dataset('TAIEX')
     data = list(data[0:1000]) + list(np.array(data[0:1000]) * 4) + list(data[0:1000]) + list(np.array(data[0:1000]) * 4)
      
     #data = data - data[0]
@@ -64,31 +55,11 @@ def main():
      
     mplt.plot(np.arange(2,len(data))+1,forecasts,'b')            
     mplt.plot(np.arange(2,len(data)),data[2:len(data)],'r')
-    fts.plot_fuzzy_sets(500,40000,
+    fts.plot_fuzzy_sets(500,45000,
                         begin = -500, scale = 400, nsteps = 1000)
     mplt.show()
      
     fts.print_rules()
-
-#     fts = sFTS(do_plots=False)
-# 
-#     for dataset_name in dataset_names:
-#         dataset = get_dataset(dataset_name)
-#         bchmk.sliding_window_benchmarks(dataset, 1000, train=0.5, inc=0.2,
-#                                         benchmark_models=True,
-#                                         benchmark_methods=benchmark_methods,
-#                                         benchmark_methods_parameters=benchmark_methods_parameters,
-#                                         models = [fts],
-#                                         build_methods = False,
-#                                         transformations=[None],
-#                                         orders=[1,2,3],
-#                                         partitions=[35], # np.arange(10,100,2),
-#                                         progress=False, type='point',
-#                                         steps_ahead=[1],
-#                                         distributed=True, nodes=['192.168.0.110', '192.168.0.107','192.168.0.106'],\n",
-#                                         file="benchmarks.db",
-#                                         dataset=dataset_name,
-#                                         tag='incremental')
 
 if __name__ == '__main__':
     main()
