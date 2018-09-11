@@ -92,24 +92,23 @@ class SilvaIncKmeansFTS(sIncFTS):
             old_centers = self.centers.copy()
                 
             if x < self.data_max and x > self.data_min:   
-                
+                 
                 # Update sets
                 self.update_sets(x)
-                
+                 
                 # 2) Update rules
                 self.update_rules(old_centers)
-            
-            else: # Reset fuxxy sets
+             
+            else: # Reset fuzzy sets
                 self.data_max = np.maximum(self.data_max,x)
                 self.data_min = np.minimum(self.data_min,x)
-                
+                 
                 self.cluster_counts = np.ones(self.nsets)
                 self.generate_sets(self.data_min, self.data_max, self.nsets)
-                
+                 
                 self.update_rules(old_centers)
                 
                     
-            
             if self.do_plots:
                 print('====================')
                 self.print_rules()
