@@ -42,7 +42,7 @@ def main():
     data = get_dataset('TAIEX')
     data = list(data)
     # data = list(data[0:1000]) + list(np.array(data[0:1000]) * 4) + list(data[0:1000]) + list(np.array(data[0:1000])
-    #  * 4) 
+    #  * 4)
 
     # data = data - data[0]
     # data = list(data) + list(data*10 - np.mean(data)) + list(data)
